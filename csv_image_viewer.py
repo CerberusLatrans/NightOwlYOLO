@@ -4,6 +4,13 @@ import pandas as pd
 from PIL import Image
 import json
 from utils import plot_image
+import requests
+
+#URL = requests.get("https://www.collegeboard.org/")
+URL = requests.get("http://thor.robots.ox.ac.uk/~vgg/data/nightowls/python/nightowls_training.json")
+print(URL)
+data = URL.text
+print(data)
 
 dir_path = os.path.dirname(os.path.realpath(__file__))
 
