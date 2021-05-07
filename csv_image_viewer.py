@@ -7,10 +7,20 @@ from utils import plot_image
 import requests
 
 #URL = requests.get("https://www.collegeboard.org/")
-URL = requests.get("http://thor.robots.ox.ac.uk/~vgg/data/nightowls/python/nightowls_training.json")
-print(URL)
-data = URL.text
+#jsonURL = requests.get("http://thor.robots.ox.ac.uk/~vgg/data/nightowls/python/nightowls_training.json",timeout=60)
+jsonURL = requests.get("http://thor.robots.ox.ac.uk/~vgg/data/nightowls/python/nightowls_training.json", verify = False, timeout=None)
+print(jsonURL.raise_for_status())
+print(jsonURL)
+labels = jsonURL.json()
+print(labels)
+
+"""
+header = {content_encoding = gzip}
+zipURL = requests.get("http://thor.robots.ox.ac.uk/~vgg/data/nightowls/python/nightowls_training.zip", headers  = header)
+print(zipURL)
+data = zipURL.text
 print(data)
+"""
 
 dir_path = os.path.dirname(os.path.realpath(__file__))
 

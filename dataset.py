@@ -36,7 +36,7 @@ class VOCDataset(torch.utils.data.Dataset):
         boxes = []
 
         with open(self.label_dir) as f:
-            #reading the json (.txt) file witht the "images" and "annotations" sections
+            #reading the json (.txt) file with the "images" and "annotations" sections
             data = json.loads(f.read())
 
             #finding an annotation id(s) which matches the id of the index in the csv

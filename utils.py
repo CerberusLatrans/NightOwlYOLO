@@ -287,11 +287,14 @@ def get_bboxes(
             predictions = model(x)
 
         batch_size = x.shape[0]
-        #print("LABELS SHAPE", labels.shape)
+        print("LABELS SHAPE", labels.shape)
+        print("LABLES:", labels)
         true_bboxes = cellboxes_to_boxes(labels)
         bboxes = cellboxes_to_boxes(predictions)
-        #print("TRUE BBOXES:", true_bboxes)
-        #print("BBOXES:", bboxes)
+        for img_true_boxes in true_bboxes:
+            print(f"TRUE BBOXES of image {true_bboxes.index(img_true_boxes)}:", len(img_true_boxes), img_true_boxes)
+        for img_pred_boxes in bboxes:
+            print(f"BBOXES of image {bboxes.index(img_pred_boxes)}:", len(img_pred_boxes), img_pred_boxes)
 
         for idx in range(batch_size):
             nms_boxes = non_max_suppression(
@@ -300,11 +303,12 @@ def get_bboxes(
                 threshold=threshold,
                 box_format=box_format,
             )
-            #print("NMS_BOXES", nms_boxes)
+            print("NMS_BOXES", len(nms_boxes), nms_boxes)
 
-            #if batch_idx == 0 and idx == 0:
-            #    plot_image(x[idx].permute(1,2,0).to("cpu"), nms_boxes)
-            #    print(nms_boxes)
+            if batch_idx == 0 and idx == 0:
+                plot_image(x[idx].permute(1,2,0).to("cpu"), nms_boxes)
+                plot_image(x[idx].permute(1,2,0).to("cpu"), true_bboxes[2:])
+                print(nms_boxes)
 
             for nms_box in nms_boxes:
                 all_pred_boxes.append([train_idx] + nms_box)
@@ -313,10 +317,15 @@ def get_bboxes(
                 # many will get converted to 0 pred
                 if box[1] > threshold:
                     all_true_boxes.append([train_idx] + box)
+                #DEBUGGING WHY THRESHOLD IS ELIMINATING ALL BBOXES
+                elif box[1] <= threshold:
+                    print(f"{box[1]} did not meet the threshold of {threshold}")
+
 
             train_idx += 1
 
-        #print("ALL PRED BOXES", all_pred_boxes)
+        print("ALL PRED BOXES", all_pred_boxes)
+        print("ALL TRUE BOXES", all_true_boxes)
     model.train()
     return all_pred_boxes, all_true_boxes
 

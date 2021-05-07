@@ -33,7 +33,7 @@ dir_path = os.path.dirname(os.path.realpath(__file__))
 # Hyperparameters etc.
 LEARNING_RATE = 2e-5
 DEVICE = "cpu"
-BATCH_SIZE = 16 # 64 in original paper but I don't have that much vram, grad accum?
+BATCH_SIZE = 1 # 64 in original paper but I don't have that much vram, grad accum?
 WEIGHT_DECAY = 0
 EPOCHS = 50
 NUM_WORKERS = 2
@@ -92,7 +92,7 @@ def main():
         load_checkpoint(torch.load(LOAD_MODEL_FILE), model, optimizer)
 
     train_dataset = VOCDataset(
-        dir_path + r"\image-name-id16.csv",
+        dir_path + r"\image-name-id1.csv",
         transform=transform,
         img_dir=IMG_DIR,
         label_dir=LABEL_DIR,
@@ -139,10 +139,12 @@ def main():
         pred_boxes, target_boxes = get_bboxes(
             train_loader, model, iou_threshold=0.5, threshold=0.4
         )
+
         #print("PRED BOXES", len(pred_boxes), pred_boxes)
         #print("TARGET BOXES", len(target_boxes), target_boxes)
         #for box in target_boxes:
-        #    print(box)
+            #print(box)
+
         mean_avg_prec = mean_average_precision(
             pred_boxes, target_boxes, iou_threshold=0.5, box_format="midpoint"
         )
