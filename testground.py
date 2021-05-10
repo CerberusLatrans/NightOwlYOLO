@@ -10,6 +10,9 @@
 #image ids go from 1,000,043 to 1,257,378
 
 #there are 36,421 unique annotations
+
+
+
 import os
 dir_path = os.path.dirname(os.path.realpath(__file__))
 print(dir_path + r"\image-name-id.csv")
@@ -26,7 +29,7 @@ image_id = name_id_csv.iloc[index, 1]
 print(name_id_csv.shape)
 print(image_id)
 
-"""
+
 #use image_id to find the boxes for that image in the json
 boxes = []
 with open(annodir) as f:
@@ -56,8 +59,7 @@ with open(annodir) as f:
         else:
             pass
     print(boxes)
-"""
-"""
+
         #print(label)
         class_label = label["category_id"]
         x,y,width,height = label["bbox"]
@@ -111,7 +113,7 @@ print("FALSE IMAGE IGNORE COUNT:", false_ign_count)
 print("CYCLIST COUNT:", cyclist_count)
 print("MOTORCYCLIST COUNT:", motorcyclist_count)
 print("OVERWRITES:", overwrite_count)
-"""
+
 #create dict for image id to png filename
 #create csv file with png filename and box labels
 

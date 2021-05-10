@@ -31,6 +31,7 @@ class VOCDataset(torch.utils.data.Dataset):
     def __getitem__(self, index):
         "this to create a list of box labels"
 
+"""
         #gets the image id of the corresponding index in the csv
         image_id = self.annotations.iloc[index, 1]
         boxes = []
@@ -56,7 +57,7 @@ class VOCDataset(torch.utils.data.Dataset):
                     #print("BOXES", boxes)
                 else:
                     pass
-
+"""
         "this is to create the image input"
         img_path = os.path.join(self.img_dir, self.annotations.iloc[index, 0])
         image = Image.open(img_path)
