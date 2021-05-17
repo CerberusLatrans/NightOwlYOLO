@@ -6,13 +6,13 @@ import os
 
 dir_path = os.path.dirname(os.path.realpath(__file__))
 annodir = dir_path + "\\" + input("what is the name of the labels file?")
-#r"\labels.txt"
 print(annodir)
 csvdir= dir_path + r"\image-name-id-test.csv"
 anno_ids = []
 id_label_dict = {}
 
-"FUNCTION TO CONVERT THE DICTIONARY {image_id:(png_name, [[x,y,w,h],[x,y,w,h],[x,y,w,h]]),...} TO CSV FILE"
+"""FUNCTION TO CONVERT THE DICTIONARY
+{image_id:(png_name, [[x,y,w,h],[x,y,w,h],[x,y,w,h]]),...} TO CSV FILE"""
 def dict_to_csv(dir, dict):
     with open(dir, mode="w+") as csv_file:
         csvwriter =  csv.writer(csv_file)
@@ -42,30 +42,35 @@ with open(annodir) as f:
     print(len(anno_ids))
 
     for image_id in list(id_label_dict):
-        #discard any dict entries which don't have an annotation ids or aren't pedestrians
+        #discard any dict entries which don't have a pedestrian annotation
         if image_id not in anno_ids:
             print("deleted!")
             del id_label_dict[image_id]
 
-            "GIVES REMAINING DICT ENTIRES ALL CORRESPONDING BBOXES AS {image_id:(png_name, [[x,y,w,h],[x,y,w,h],[x,y,w,h]])}"
-            #if the dict entry DOES have an annotation for pedestrian, then append the bboxes as a list to the 2nd element of the corresponding dict entry tuple value
+            """GIVES REMAINING DICT ENTIRES ALL CORRESPONDING BBOXES AS:
+            {image_id:(png_name, [[x,y,w,h],[x,y,w,h],[x,y,w,h]])}"""
+            #if the dict entry DOES have an annotation for pedestrian,
+            #then append the bboxes as a list to the 2nd element of the
+            #corresponding dict entry tuple value
         elif image_id in anno_ids:
             bboxes=[]
-            #finding an annotation id(s) which matches the id for each dicionary entry
-            #if there is more than one annotation id found, then there are multiple bounding boxes
+            #finding an annotation id(s) which matches the id for each dict entry
+            #if there is more than one annotation id found,
+            #then there are multiple bounding boxes
             for label in data["annotations"]:
                 if label["image_id"] == image_id:
-                    #once found, it stores the class number (1,2,3, or 4) in class_label
+                    #in class_label is 1,2,3, or 4
                     class_label = label["category_id"]
 
-                    #if the label is 1 (pedestrian) then it appends the the boxes list:
-                    #a list of the label (can only be "1") and the box dimensions scaled by the image dimensions (1024x640)
+                    #if the label is 1 (pedestrian), appends to the boxes list:
+                    #a list of the label (can only be "1") and the box dimensions
+                    #scaled by the image dimensions (1024x640)
                     if class_label == 1:
                         x,y,width,height = label["bbox"]
                         bboxes.append([class_label, x/1024, y/640, width/1024, height/640])
                         print("appended!")
-                    elif class_label != 1: #should all be 1 from the anno_id list filter BUT STILL GETTING ERROR?!
-                        print("ERROR", class_label)
+                    #elif class_label != 1:
+                        #print("ERROR", class_label)
                     #print("BOXES", boxes)
             id_label_dict[image_id] = id_label_dict[image_id]+(bboxes,)
 
@@ -75,6 +80,73 @@ with open(annodir) as f:
     #print(df.shape)
 
 #I got 130,064 total image ids
-
 #there are 42,770 annotation ids of category 1
 #there are 25,670 unque image annotations with annotation ids of category 1
+
+"""
+JSON STRUCTURE:
+{
+"images":
+    [
+        {"height":640,
+        "width":1024,
+        "daytime":"night",
+        "file_name":"58c58132bc260137e096a51e.png",
+        "id":1000000,
+        "recordings_id":null,
+        "timestamp":2947039797}
+        ...,
+        {"height":640,
+        "width":1024,
+        "daytime":"night",
+        "file_name":"58c58031bc260137bc4a7d86.png",
+        "id":1257378,
+        "recordings_id":33.0,
+        "timestamp":941066214}
+    ],
+
+"annotations":
+    [
+        {"occluded":null,
+        "difficult":null,
+        "bbox":[453,207,30,54],
+        "id":1000007,
+        "category_id":4,
+        "image_id":1000043,
+        "pose_id":5,
+        "tracking_id":1000000,
+        "ignore":1,
+        "area":1620,
+        "truncated":false},
+        ... ,
+        {"occluded":false,
+        "difficult":false,
+        "bbox":[755,101,89,330],
+        "id":1102050,
+        "category_id":1,
+        "image_id":1257378,
+        "pose_id":4,
+        "tracking_id":1006071,
+        "ignore":0,
+        "area":29370,
+        "truncated":false}
+    ],
+
+"categories":
+    [
+        {"name":"pedestrian","id":1},
+        {"name":"bicycledriver","id":2},
+        {"name":"motorbikedriver","id":3},
+        {"name":"ignore","id":4}
+    ],
+
+"poses" :
+    [
+        {"name":"front","id":0},
+        {"name":"left","id":1},
+        {"name":"back","id":2},
+        {"name":"right","id":3},
+        {"name":"nan","id":4}
+    ]
+}
+"""
