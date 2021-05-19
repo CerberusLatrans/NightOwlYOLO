@@ -17,9 +17,14 @@ def dict_to_csv(dir, dict):
     with open(dir, mode="w+") as csv_file:
         csvwriter =  csv.writer(csv_file)
         csvwriter.writerow(["image_id","png_name", "bboxes"])
-        for key in id_label_dict:
+        for key in dict:
             value = dict[key]
-            csvwriter.writerow([key, value[0], value[1]])
+            print(type(value))
+            if isinstance(value, tuple) and isinstance(value[0], str) and isinstance(value[1], list):
+                csvwriter.writerow([key, value[0], value[1]])
+            else:
+                print("Error: Dictionary in wrong format. Needs to be {id:(png,[[x1,y1,w1,h1],...]),...}")
+                quit()
 
 with open(annodir) as f:
     data = json.loads(f.read())
