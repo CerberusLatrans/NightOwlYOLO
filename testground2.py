@@ -2,24 +2,19 @@ import csv
 import json
 import pandas as pd
 import os
+from ast import literal_eval
+from dataset import VOCDataset
 
-dir_path = os.path.dirname(os.path.realpath(__file__))
-csvdir= dir_path + r"\image-name-id-mock.csv"
+dir_path =  os.path.dirname(os.path.realpath(__file__))
 
-def dict_to_csv(dir, dict):
-    with open(dir, mode="w+") as csv_file:
-        csvwriter =  csv.writer(csv_file)
-        csvwriter.writerow(["image_id","png_name", "bboxes"])
-        for key in dict:
-            value = dict[key]
-            print(type(value))
-            if isinstance(value, tuple) and isinstance(value[0], str) and isinstance(value[1], list):
-                print("its a tuple!")
-                csvwriter.writerow([key, value[0], value[1]])
-            else:
-                print("Error: Dictionary in wrong format. Needs to be {id:(png,[[x1,y1,w1,h1],...]),...}")
-                quit()
+transform = None
+img_dir = dir_path + r"\nightowls_training\\"
+label_dir = dir_path + r"\labels.txt"
+train_dataset = VOCDataset(
+    dir_path + r"\image-name-id1.csv",
+    transform=transform,
+    img_dir=img_dir,
+    label_dir=label_dir,
+)
 
-test_dict = {1:("png",[[1,2,3,4],[5,6,7,100000]])}
-#test_dict = {1:"png"}
-dict_to_csv(csvdir, test_dict)
+print(train_dataset[0])

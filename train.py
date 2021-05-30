@@ -98,7 +98,7 @@ def main():
         label_dir=LABEL_DIR,
     )
     n_samples = train_dataset.__len__()
-    #print(n_samples)
+    print(n_samples)
     """
     test_dataset = VOCDataset(
         "data/test.csv", transform=transform, img_dir=IMG_DIR, label_dir=LABEL_DIR,
@@ -140,10 +140,8 @@ def main():
             train_loader, model, iou_threshold=0.5, threshold=0.4
         )
 
-        #print("PRED BOXES", len(pred_boxes), pred_boxes)
-        #print("TARGET BOXES", len(target_boxes), target_boxes)
-        #for box in target_boxes:
-            #print(box)
+        print("DEBUGG PRED BOXES", len(pred_boxes), pred_boxes)
+        print("DEBUGG TARGET BOXES", len(target_boxes), target_boxes)
 
         mean_avg_prec = mean_average_precision(
             pred_boxes, target_boxes, iou_threshold=0.5, box_format="midpoint"
@@ -184,7 +182,8 @@ if __name__ == "__main__":
 #this is causing the get_bboxes() function to output no predictions
 #fixed by commenting out a line eliminating all boxes below the threshold value in non max suppression
 
-#bug: the average precision list length in mAP being 0 is causing devision by 0
+#bug: the average precision list length in mAP being 0 is causing division by 0
+#fixed by changing c+1 back to c so that predictions of class 0 are appended in MAP
 
 #epoch 30 mean loss to 0.74
 #bug: mAP still at 0

@@ -64,6 +64,9 @@ def non_max_suppression(bboxes, iou_threshold, threshold, box_format="midpoint")
     #print('ZEROETH', len(bboxes), bboxes)
     assert type(bboxes) == list
 
+    for box in bboxes:
+        if box[1] <= threshold:
+            print(f"{box[1]} is not greater than {threshold}")
     "COMMENTING THIS LINE OUT BECAUSE THE THRESHHOLD ELIMINATES ALL THE BOXES"
     #bboxes = [box for box in bboxes if box[1] > threshold]
     #print("FIRST", bboxes)
@@ -107,6 +110,7 @@ def mean_average_precision(
         float: mAP value across all classes given a specific IoU threshold
     """
 
+    #pred_boxes list: [[train_idx, class_pred, prob_score, x, y, w, h]]
     # list storing all AP for respective classes
     average_precisions = []
 
@@ -120,13 +124,22 @@ def mean_average_precision(
         # Go through all predictions and targets,
         # and only add the ones that belong to the
         # current class c
+        ###################################################
+        #UNDER INVESTIGATION FOR ELIMINATING ALL PRED BOXES
+        ###################################################
+        #NONE ARE BEING APPENDED BECAUSE THE CLASS_PRED IS 0 FOR ALL
+        #FIXED: C INSTEAD OF C+1
+        #BUT I THOUGHT THAT C+1=1 MAKES MORE SENSE FOR CLASS 1
         for detection in pred_boxes:
-            if detection[1] == c+1:
+            if detection[1] == c:
                 detections.append(detection)
 
         for true_box in true_boxes:
-            if true_box[1] == c+1:
+            if true_box[1] == c:
                 ground_truths.append(true_box)
+        ###################################################
+        #UNDER INVESTIGATION FOR ELIMINATING ALL PRED BOXES
+        ###################################################
 
         #print("detections", len(detections), detections)
         #print("ground truths", len(ground_truths), ground_truths)
@@ -226,7 +239,7 @@ def mean_average_precision(
 
         # torch.trapz for numerical integration
         average_precisions.append(torch.trapz(precisions, recalls))
-        #print(len(average_precisions), average_precisions)
+        #print("AVERAGE PRECISIONS: ", len(average_precisions), average_precisions)
 
     return sum(average_precisions) / len(average_precisions)
 
@@ -287,14 +300,16 @@ def get_bboxes(
             predictions = model(x)
 
         batch_size = x.shape[0]
-        print("LABELS SHAPE", labels.shape)
-        print("LABLES:", labels)
+        #print("LABELS SHAPE", labels.shape)
+        #print("LABLES:", labels)
         true_bboxes = cellboxes_to_boxes(labels)
         bboxes = cellboxes_to_boxes(predictions)
-        for img_true_boxes in true_bboxes:
-            print(f"TRUE BBOXES of image {true_bboxes.index(img_true_boxes)}:", len(img_true_boxes), img_true_boxes)
-        for img_pred_boxes in bboxes:
-            print(f"BBOXES of image {bboxes.index(img_pred_boxes)}:", len(img_pred_boxes), img_pred_boxes)
+        #print(true_bboxes)
+        #print(bboxes)
+        #for i in true_bboxes[0]:
+            #print(f"CONVERTED LABELS: ", len(i),i)
+        #for i in bboxes[0]:
+            #print(f"CONVERTED PREDS: ", len(i), i)
 
         for idx in range(batch_size):
             nms_boxes = non_max_suppression(
@@ -303,29 +318,35 @@ def get_bboxes(
                 threshold=threshold,
                 box_format=box_format,
             )
-            print("NMS_BOXES", len(nms_boxes), nms_boxes)
+            #print("NMS_BOXES", len(nms_boxes), nms_boxes)
 
+            """
             if batch_idx == 0 and idx == 0:
                 plot_image(x[idx].permute(1,2,0).to("cpu"), nms_boxes)
                 plot_image(x[idx].permute(1,2,0).to("cpu"), true_bboxes[2:])
-                print(nms_boxes)
-
+                #print(nms_boxes)
+            """
             for nms_box in nms_boxes:
                 all_pred_boxes.append([train_idx] + nms_box)
+                #print([train_idx])
+                #print(nms_box)
 
             for box in true_bboxes[idx]:
                 # many will get converted to 0 pred
                 if box[1] > threshold:
+                    #print("train_idx:", train_idx, box)
                     all_true_boxes.append([train_idx] + box)
                 #DEBUGGING WHY THRESHOLD IS ELIMINATING ALL BBOXES
-                elif box[1] <= threshold:
-                    print(f"{box[1]} did not meet the threshold of {threshold}")
+                #SOLVED: TRUE BBOXES THRESHOLD IS WORKING FINE;
+                #PRED BOXES IS STILL BEING ELIMINATED BY NMS
+                #elif box[1] <= threshold:
+                    #print(f"{box[1]} did not meet the threshold of {threshold}")
 
 
             train_idx += 1
 
-        print("ALL PRED BOXES", all_pred_boxes)
-        print("ALL TRUE BOXES", all_true_boxes)
+        #print("ALL PRED BOXES", all_pred_boxes)
+        #print("ALL TRUE BOXES", all_true_boxes)
     model.train()
     return all_pred_boxes, all_true_boxes
 
@@ -346,26 +367,45 @@ def convert_cellboxes(predictions, S=7):
     #print("PREDICTIONS SHAPE", predictions.shape)
     batch_size = predictions.shape[0]
     predictions = predictions.reshape(batch_size, 7, 7, 11)
+    #print("PREDICTIONS SPECIAL", predictions)
     bboxes1 = predictions[..., 2:6]
     bboxes2 = predictions[..., 7:11]
     scores = torch.cat(
-        (predictions[..., 2].unsqueeze(0), predictions[..., 7].unsqueeze(0)), dim=0
+        (predictions[..., 1].unsqueeze(0), predictions[..., 6].unsqueeze(0)), dim=0
     )
     best_box = scores.argmax(0).unsqueeze(-1)
+    #print("BEST BOX: ", best_box)
+
+    #for each of the 49 (7x7) grid cells:
+    #if best_box is 1, then bboxes2 is better
+    #if best_box is 0, then bboxes 1 is better
     best_boxes = bboxes1 * (1 - best_box) + best_box * bboxes2
+    #print("BEST BOXES: ", best_boxes)
+
+    #for each of the 48 (7x7) grid cells, it gives it an index 0-6 for each row (or maybe column)
     cell_indices = torch.arange(7).repeat(batch_size, 7, 1).unsqueeze(-1)
+    #print("CELL_INDICES: ", cell_indices)
     x = 1 / S * (best_boxes[..., :1] + cell_indices)
     y = 1 / S * (best_boxes[..., 1:2] + cell_indices.permute(0, 2, 1, 3))
     w_y = 1 / S * best_boxes[..., 2:4]
-    converted_bboxes = torch.cat((x, y, w_y), dim=-1)
-    predicted_class = predictions[..., :2].argmax(-1).unsqueeze(-1)
-    best_confidence = torch.max(predictions[..., 2], predictions[..., 7]).unsqueeze(
-        -1
-    )
-    converted_preds = torch.cat(
-        (predicted_class, best_confidence, converted_bboxes), dim=-1
-    )
 
+    #each [x,y,w,h] is now in the form [x,y,w_y]
+    converted_bboxes = torch.cat((x, y, w_y), dim=-1)
+    #print("CONVERTED_BBOXES: ", converted_bboxes)
+
+    #######################################
+    #UNDER INVESTIGATION
+    #######################################
+    predicted_class = predictions[..., :1].argmax(-1).unsqueeze(-1)
+    #print("PREDICTED CLASS: ", predicted_class)
+    #######################################
+    #UNDER INVESTIGATION
+    #######################################
+
+    best_confidence = torch.max(predictions[..., 1], predictions[..., 6]).unsqueeze(-1)
+    #print("BEST_CONFIDENCE", best_confidence)
+    converted_preds = torch.cat((predicted_class, best_confidence, converted_bboxes), dim=-1)
+    #print("convert_cellboxes(): (predicted class + best confidence + converted bboxes)", converted_preds)
     return converted_preds
 
 
