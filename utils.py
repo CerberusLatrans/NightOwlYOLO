@@ -65,10 +65,10 @@ def non_max_suppression(bboxes, iou_threshold, threshold, box_format="midpoint")
     assert type(bboxes) == list
 
     for box in bboxes:
-        if box[1] <= threshold:
-            print(f"{box[1]} is not greater than {threshold}")
+        if box[1] > threshold:
+            print(f"{box[1]} is greater than {threshold}")
     "COMMENTING THIS LINE OUT BECAUSE THE THRESHHOLD ELIMINATES ALL THE BOXES"
-    #bboxes = [box for box in bboxes if box[1] > threshold]
+    bboxes = [box for box in bboxes if box[1] > threshold]
     #print("FIRST", bboxes)
     bboxes = sorted(bboxes, key=lambda x: x[1], reverse=True)
     #print("SECOND", bboxes)
@@ -116,8 +116,11 @@ def mean_average_precision(
 
     # used for numerical stability later on
     epsilon = 1e-6
+    #print("pred_boxes: ", pred_boxes)
+    #print("true_boxes: ", true_boxes)
 
     for c in range(num_classes):
+        print("C: ", c)
         detections = []
         ground_truths = []
 
@@ -131,8 +134,10 @@ def mean_average_precision(
         #FIXED: C INSTEAD OF C+1
         #BUT I THOUGHT THAT C+1=1 MAKES MORE SENSE FOR CLASS 1
         for detection in pred_boxes:
+            #print("class: ",detection)
             if detection[1] == c:
                 detections.append(detection)
+                #print("appended: ", detection)
 
         for true_box in true_boxes:
             if true_box[1] == c:
@@ -247,7 +252,9 @@ def mean_average_precision(
 def plot_image(image, boxes):
     """Plots predicted bounding boxes on the image"""
     im = np.array(image)
+    #print("PLOT 1: ", len(im), im)
     height, width, _ = im.shape
+    #print("PLOT 2: ", im.shape)
 
     # Create figure and axes
     fig, ax = plt.subplots(1)
@@ -293,6 +300,7 @@ def get_bboxes(
     train_idx = 0
 
     for batch_idx, (x, labels) in enumerate(loader):
+        print(batch_idx)
         x = x.to(device)
         labels = labels.to(device)
 

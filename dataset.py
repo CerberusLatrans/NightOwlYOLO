@@ -31,13 +31,13 @@ class VOCDataset(torch.utils.data.Dataset):
 
     def __getitem__(self, index):
         "this to get a list of box labels from the csv"
-        boxes = literal_eval(self.annotations.iloc[index,2])
-        print("BOXES LABELS FROM CSV:" + str(boxes))
+        pure_boxes = literal_eval(self.annotations.iloc[index,2])
+        #print("BOXES LABELS FROM CSV:" + str(boxes))
 
         "this is to create the image input"
         img_path = os.path.join(self.img_dir, self.annotations.iloc[index, 1])
         image = Image.open(img_path)
-        boxes = torch.tensor(boxes)
+        boxes = torch.tensor(pure_boxes)
 
         #this is for any transformations or data augmentation
         #(which is why boxes should be converted to tensor since it will probably be done in pytorch)
@@ -90,4 +90,7 @@ class VOCDataset(torch.utils.data.Dataset):
 
                 # Set one hot encoding for class_label
                 label_matrix[i, j, class_label-1] = 1
+
+        #print("IMAGE:", image.shape, image)
+        #print("LABEL_MATRIX:", label_matrix.shape, label_matrix)
         return image, label_matrix

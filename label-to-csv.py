@@ -7,7 +7,7 @@ import os
 dir_path = os.path.dirname(os.path.realpath(__file__))
 annodir = dir_path + "\\" + input("what is the name of the labels file?")
 print(annodir)
-csvdir= dir_path + r"\image-name-id-test.csv"
+csvdir= dir_path + r"\image-name-id-test(corrected).csv"
 anno_ids = []
 id_label_dict = {}
 
@@ -72,7 +72,12 @@ with open(annodir) as f:
                     #scaled by the image dimensions (1024x640)
                     if class_label == 1:
                         x,y,width,height = label["bbox"]
-                        bboxes.append([class_label, x/1024, y/640, width/1024, height/640])
+                        w = width/1024
+                        h = height/640
+                        x = (x/1024)+(0.5*w)
+                        y = (y/640)+(0.5*h)
+
+                        bboxes.append([class_label, x, y, w, h])
                         print("appended!")
                     #elif class_label != 1:
                         #print("ERROR", class_label)
